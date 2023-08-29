@@ -151,15 +151,36 @@ export default {
     triggerOnScrolLTrigger: false,
     //
     currentScreenWidth: 0,
+    optionalHeaderHeight: 0,
+    tableH: 0,
+    scrollBoxHeight: 0,
+    tableMarginBottom: 0,
   }),
   methods: {
+    setVariables() {
+      this.currentScreenWidth == document.documentElement.offsetWidth;
+      this.optionalHeaderHeight =
+        document.querySelector('header')?.scrollHeight || 0;
+      if (!this.stickys.length)
+        this.stickys = [
+          this.$refs.fixed.querySelector('.row.head-sticky'),
+          this.$refs.auto.querySelector('.row.head-sticky'),
+        ];
+      if (!this.table)
+        this.table = this.$refs.table || document.querySelector('.table');
+      this.tableH = this.table.scrollHeight;
+      const computedOptions = window.getComputedStyle(this.table);
+      this.tableMarginBottom = computedOptions?.marginBottom
+        ? parseInt(computedOptions.marginBottom)
+        : 0;
+    },
     scopeResize() {
       if (this.currentScreenWidth == document.documentElement.offsetWidth)
         return null;
-      this.currentScreenWidth == document.documentElement.offsetWidth;
-      this.stickyChecker();
+      this.setVariables();
       this.createStickyScroll();
       this.rowHeightChecker();
+      this.stickyChecker();
       if (this.scrollTrigger) this.stickyScrollChecker();
     },
     scopeScroll() {
@@ -168,30 +189,18 @@ export default {
     },
     stickyChecker() {
       try {
-        if (!this.stickys.length)
-          this.stickys = [
-            this.$refs.fixed.querySelector('.row.head-sticky'),
-            this.$refs.auto.querySelector('.row.head-sticky'),
-          ];
-        if (!this.table)
-          this.table = this.$refs.table || document.querySelector('.table');
-        const optionalHeaderHeight =
-          document.querySelector('header')?.scrollHeight || 0;
+        if (!this.stickys.length || !this.table) return null;
         const top = this.table.getBoundingClientRect().top;
-        const tableH = this.table.scrollHeight;
         const topPos = top + window.pageYOffset;
-        if (window.pageYOffset + optionalHeaderHeight > topPos) {
-          const optionalScrollHeight = this.scrollBox
-            ? this.scrollBox.offsetHeight
-            : 0;
-          let val = window.pageYOffset + optionalHeaderHeight - topPos;
+        if (window.pageYOffset + this.optionalHeaderHeight > topPos) {
+          let val = window.pageYOffset + this.optionalHeaderHeight - topPos;
           this.stickys.forEach((item) => {
             item.classList.add('move');
-            if (item.scrollHeight + val < tableH - optionalScrollHeight) {
+            if (item.scrollHeight + val < this.tableH - this.scrollBoxHeight) {
               item.style.top = val + 'px';
             } else {
               item.style.top =
-                tableH - optionalScrollHeight - item.scrollHeight + 'px';
+                this.tableH - this.scrollBoxHeight - item.scrollHeight + 'px';
             }
           });
         } else {
@@ -206,36 +215,18 @@ export default {
     },
     stickyScrollChecker() {
       try {
-        if (!this.scrollTrigger) return null;
-        if (!this.table)
-          this.table = this.$refs.table || document.querySelector('.table');
-
-        const optionalHeaderHeight =
-          document.querySelector('header')?.scrollHeight || 0;
-        const optionalScrollH = this.scrollBox
-          ? this.scrollBox.offsetHeight
-          : 0;
+        if (!this.scrollTrigger || !this.table) return null;
         const stickyH = Math.max(
           this.$refs.fixed.querySelector('.head-sticky.row')?.offsetHeight || 0,
           this.$refs.auto.querySelector('.head-sticky.row')?.offsetHeight || 0
         );
         const screenH = document.documentElement.clientHeight;
         const scrollYTotal = window.pageYOffset + screenH;
+        const tableTop = this.table.getBoundingClientRect().top;
         const tableTriggerTop =
-          window.pageYOffset +
-          this.table.getBoundingClientRect().top +
-          stickyH +
-          optionalScrollH;
-        const topPos =
-          window.pageYOffset +
-          this.table.getBoundingClientRect().top +
-          optionalScrollH;
-        const computedOptions = window.getComputedStyle(this.table);
-        const margBot = computedOptions?.marginBottom
-          ? parseInt(computedOptions.marginBottom)
-          : 0;
-
-        const maxTopPos = this.table.clientHeight - margBot;
+          window.pageYOffset + tableTop + stickyH + this.scrollBoxHeight;
+        const topPos = window.pageYOffset + tableTop + this.scrollBoxHeight;
+        const maxTopPos = this.table.clientHeight - this.tableMarginBottom;
 
         if (tableTriggerTop < scrollYTotal) {
           this.scrollBox.style.top =
@@ -275,9 +266,10 @@ export default {
         fixedRows.forEach((item, i) => {
           const val = item.scrollHeight;
           const val2 = autoRows[i].scrollHeight;
+          console.log(val, val2);
           const maxVal = Math.max(val, val2);
-          item.style.minHeight = maxVal + 'px';
-          autoRows[i].style.minHeight = maxVal + 'px';
+          item.style.height = maxVal + 'px';
+          autoRows[i].style.height = maxVal + 'px';
         });
       } catch (e) {
         console.log(e);
@@ -299,14 +291,14 @@ export default {
             this.$refs.table.classList.add('--scroll');
             this.scrollBox = scrollBox;
             this.scrollTrigger = scrollTrigger;
-
-            // Правильное задание ширины контейнера и ползунка
             this.scrollBox.style.width = visibleW + 'px';
             const triggerWidth = (visibleW / totalW) * visibleW;
             scrollTrigger.style.width = triggerWidth + 'px';
+            this.scrollBoxHeight = this.scrollBox.offsetHeight;
+            this.tableH = this.table.scrollHeight;
           }
         } else {
-          // Правильное обновление ширины ползунка при изменении размеров окна
+          this.scrollBoxHeight = this.scrollBox.offsetHeight;
           this.scrollBox.style.width = visibleW + 'px';
           const triggerWidth = (visibleW / totalW) * visibleW;
           this.scrollTrigger.style.width = triggerWidth + 'px';
@@ -426,9 +418,9 @@ export default {
     },
   },
   mounted() {
-    this.currentScreenWidth = document.documentElement.offsetWidth;
-    this.rowHeightChecker();
+    this.setVariables();
     this.createStickyScroll();
+    this.rowHeightChecker();
     this.stickyChecker();
     this.stickyScrollChecker();
     window.addEventListener('resize', this.scopeResize);
