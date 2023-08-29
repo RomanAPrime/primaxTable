@@ -149,8 +149,23 @@ export default {
     scrollBox: null,
     scrollTrigger: null,
     triggerOnScrolLTrigger: false,
+    //
+    currentScreenWidth: 0,
   }),
   methods: {
+    scopeResize() {
+      if (this.currentScreenWidth == document.documentElement.offsetWidth)
+        return null;
+      this.currentScreenWidth == document.documentElement.offsetWidth;
+      this.stickyChecker();
+      this.createStickyScroll();
+      this.rowHeightChecker();
+      if (this.scrollTrigger) this.stickyScrollChecker();
+    },
+    scopeScroll() {
+      this.stickyChecker();
+      if (this.scrollTrigger) this.stickyScrollChecker();
+    },
     stickyChecker() {
       try {
         if (!this.stickys.length)
@@ -411,32 +426,25 @@ export default {
     },
   },
   mounted() {
+    this.currentScreenWidth = document.documentElement.offsetWidth;
     this.rowHeightChecker();
     this.createStickyScroll();
     this.stickyChecker();
     this.stickyScrollChecker();
+    window.addEventListener('resize', this.scopeResize);
+    window.addEventListener('scroll', this.scopeScroll);
     if (this.$refs.auto)
       this.$refs.auto.addEventListener('scroll', this.checkscrolledAuto);
-    window.addEventListener('scroll', this.stickyChecker);
-    window.addEventListener('resize', this.stickyChecker);
-    window.addEventListener('resize', this.createStickyScroll);
-    window.addEventListener('resize', this.rowHeightChecker);
     if (this.scrollTrigger) {
-      window.addEventListener('scroll', this.stickyScrollChecker);
-      window.addEventListener('resize', this.stickyScrollChecker);
       this.scrollTrigger.addEventListener('mousedown', this.mousedown);
       this.scrollTrigger.addEventListener('touchstart', this.touchstart);
     }
     document.addEventListener('keydown', this.keyDown);
   },
   beforeUnmount() {
-    window.removeEventListener('scroll', this.stickyChecker);
-    window.removeEventListener('resize', this.stickyChecker);
-    window.removeEventListener('resize', this.rowHeightChecker);
-    window.removeEventListener('resize', this.createStickyScroll);
+    window.removeEventListener('scroll', this.scopeScroll);
+    window.removeEventListener('resize', this.scopeResize);
     if (this.scrollTrigger) {
-      window.removeEventListener('scroll', this.stickyScrollChecker);
-      window.removeEventListener('resize', this.stickyScrollChecker);
       this.scrollTrigger.removeEventListener('mousedown', this.mousedown);
       this.scrollTrigger.removeEventListener('touchstart', this.touchstart);
     }
