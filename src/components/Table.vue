@@ -215,14 +215,13 @@ export default {
           window.pageYOffset +
           this.table.getBoundingClientRect().top +
           optionalScrollH;
-        console.log(scrollYTotal, tableTriggerTop);
         const computedOptions = window.getComputedStyle(this.table);
         const margBot = computedOptions?.marginBottom
           ? parseInt(computedOptions.marginBottom)
           : 0;
 
         const maxTopPos = this.table.clientHeight - margBot;
-        console.log('screenH', screenH, document.documentElement.offsetHeight);
+
         if (tableTriggerTop < scrollYTotal) {
           this.scrollBox.style.top =
             Math.min(maxTopPos, scrollYTotal - topPos) + 'px';
