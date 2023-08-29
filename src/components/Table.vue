@@ -301,7 +301,13 @@ export default {
         console.log(e);
       }
     },
-
+    calculateScroleMove(pos, maxpos) {
+      const scrollPercentage = (pos / maxpos) * 100;
+      const newScrollLeft =
+        (scrollPercentage / 100) *
+        (this.$refs.auto.scrollWidth - this.$refs.auto.offsetWidth);
+      return newScrollLeft;
+    },
     mousedown(e) {
       try {
         e.preventDefault();
@@ -321,12 +327,10 @@ export default {
             Math.max(0, leftPos + deltaX)
           );
           this.scrollTrigger.style.left = newTriggerLeft + 'px';
-
-          const scrollPercentage = (newTriggerLeft / maxScrollLeft) * 100;
-          const newScrollLeft =
-            (scrollPercentage / 100) *
-            (this.$refs.auto.scrollWidth - this.$refs.auto.offsetWidth);
-          this.$refs.auto.scrollLeft = newScrollLeft;
+          this.$refs.auto.scrollLeft = this.calculateScroleMove(
+            newTriggerLeft,
+            maxScrollLeft
+          );
         };
 
         const onMouseUp = () => {
@@ -341,7 +345,6 @@ export default {
       }
     },
     touchstart(e) {
-      console.log('touchstart', e);
       try {
         e.preventDefault();
         let startX = e.targetTouches[0].clientX;
@@ -360,12 +363,10 @@ export default {
             Math.max(0, leftPos + deltaX)
           );
           this.scrollTrigger.style.left = newTriggerLeft + 'px';
-
-          const scrollPercentage = (newTriggerLeft / maxScrollLeft) * 100;
-          const newScrollLeft =
-            (scrollPercentage / 100) *
-            (this.$refs.auto.scrollWidth - this.$refs.auto.offsetWidth);
-          this.$refs.auto.scrollLeft = newScrollLeft;
+          this.$refs.auto.scrollLeft = this.calculateScroleMove(
+            newTriggerLeft,
+            maxScrollLeft
+          );
         };
 
         const onMouseUp = () => {
@@ -378,6 +379,36 @@ export default {
       } catch (e) {
         console.log(e);
       }
+    },
+    scrollGorizontalMove(direction) {
+      const val = 5;
+      const currentLeftPos = this.scrollTrigger?.style?.left
+        ? parseInt(this.scrollTrigger.style.left)
+        : 0;
+      if (direction) {
+        const maxLeftPos =
+          this.scrollBox.offsetWidth - this.scrollTrigger.offsetWidth;
+        const newLeftPos = Math.min(maxLeftPos, currentLeftPos + val);
+        this.scrollTrigger.style.left = newLeftPos + 'px';
+        this.$refs.auto.scrollLeft = this.calculateScroleMove(
+          newLeftPos,
+          maxLeftPos
+        );
+      } else {
+        const maxLeftPos = 0;
+        const newLeftPos = Math.max(maxLeftPos, currentLeftPos - val);
+        this.scrollTrigger.style.left = newLeftPos + 'px';
+        this.$refs.auto.scrollLeft = this.calculateScroleMove(
+          newLeftPos,
+          this.scrollBox.offsetWidth - this.scrollTrigger.offsetWidth
+        );
+      }
+    },
+    keyDown({ keyCode }) {
+      const right = 39;
+      const left = 37;
+      if (keyCode == right) this.scrollGorizontalMove(1);
+      if (keyCode == left) this.scrollGorizontalMove(0);
     },
   },
   mounted() {
@@ -397,6 +428,7 @@ export default {
       this.scrollTrigger.addEventListener('mousedown', this.mousedown);
       this.scrollTrigger.addEventListener('touchstart', this.touchstart);
     }
+    document.addEventListener('keydown', this.keyDown);
   },
   beforeUnmount() {
     window.removeEventListener('scroll', this.stickyChecker);
@@ -412,6 +444,7 @@ export default {
 
     if (this.$refs.auto)
       this.$refs.auto.removeEventListener('scroll', this.checkscrolledAuto);
+    document.removeEventListener('keydown', this.keyDown);
   },
 };
 </script>
@@ -425,7 +458,7 @@ export default {
     padding-bottom: 25px;
     ::v-deep(.scroll-box) {
       height: 25px;
-      background: rgb(34, 34, 34);
+      background: #ffcd3821;
       position: absolute;
       top: calc(100% - 25px);
       right: 0;
@@ -433,8 +466,12 @@ export default {
         position: relative;
         height: 100%;
         transition: width 0.2s;
-        background: grey;
+        background: #ffcd38bb;
         cursor: pointer;
+        transition: background 0.2s;
+        &:active {
+          background: #ffce38;
+        }
       }
     }
   }
@@ -444,7 +481,7 @@ export default {
     border-right: 2px solid transparent;
     transition: border-color 0.2s;
     &.move {
-      border-color: grey;
+      border-color: #00cffa;
     }
     .row {
       & > div {
@@ -481,17 +518,17 @@ export default {
     }
   }
   .head-sticky {
+    color: #020509;
     font-weight: bold;
-    background: black;
     z-index: 1;
     position: relative;
     &.move {
       & > div {
-        border-bottom: 2px solid grey;
+        border-bottom: 2px solid #00cffa;
       }
     }
     & > div {
-      background: black;
+      background: #ffce38;
       border-bottom: 2px solid transparent;
       transition: border-color 0.2s;
     }

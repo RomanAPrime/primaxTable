@@ -195,21 +195,32 @@ header {
   height: 60px;
   display: flex;
   align-items: center;
-  background: rgb(68, 68, 68);
-  color: white;
+  background: #020509;
+  color: #ffce38;
   z-index: 10;
+  padding: 20px;
+  border-bottom: 1px solid #ffce38;
 }
 .wrapper {
   padding: 80px 40px 40px 40px;
   min-height: 150vh;
   display: flex;
   overflow: hidden;
-  color: whitesmoke;
+  color: #ffce38;
+  @media (max-width: 1100px) {
+    flex-direction: column;
+  }
   aside {
     width: 40%;
+    @media (max-width: 1100px) {
+      width: 100%;
+    }
   }
   .content {
     width: 60%;
+    @media (max-width: 1100px) {
+      width: 100%;
+    }
     p {
       margin-bottom: 25px;
     }
